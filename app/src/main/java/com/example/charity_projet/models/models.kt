@@ -17,14 +17,13 @@ data class LoginResponse(
     val expiresIn: Int?,
     @SerializedName("refresh_token")
     val refreshToken: String?,
-    @SerializedName("user_id")
+    @SerializedName("user_id")        // 🔥 IMPORTANT: Ce champ doit exister
     val userId: Long?,
-    @SerializedName("username")
+    @SerializedName("username")       // 🔥 IMPORTANT: Ce champ doit exister
     val username: String?,
-    @SerializedName("role")
+    @SerializedName("role")           // 🔥 IMPORTANT: Ce champ doit exister
     val role: String?
 )
-
 data class RegisterRequest(
     val username: String,  // ⚠️ Changer identifiant → username
     val email: String,

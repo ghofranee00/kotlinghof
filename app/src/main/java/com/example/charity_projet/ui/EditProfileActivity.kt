@@ -16,6 +16,7 @@ import com.example.charity_projet.api.RetrofitClient
 import com.example.charity_projet.api.SessionManager
 import com.example.charity_projet.models.PasswordUpdateRequest
 import com.example.charity_projet.models.UserUpdateRequest
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -106,7 +107,7 @@ class EditProfileActivity : AppCompatActivity() {
         etEmail.setText(email)
     }
 
-    private fun updateProfile(firstName: String, lastName: String, email: String) {
+    /*private fun updateProfile(firstName: String, lastName: String, email: String) {
         val token = sessionManager.fetchAuthToken()
         val username = sessionManager.getUsername() // 🔥 AJOUT : Récupérer le username
 
@@ -167,8 +168,105 @@ class EditProfileActivity : AppCompatActivity() {
             }
         }
     }
+*/
+    private fun updateProfile(firstName: String, lastName: String, email: String) {
+        val token = sessionManager.fetchAuthToken()
 
+        if (token == null) {
+            Toast.makeText(this, "Non authentifié", Toast.LENGTH_SHORT).show()
+            redirectToLogin()
+            return
+        }
 
+        showLoading(true)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 1. D'abord, récupérer le profil pour avoir l'ID
+                val profileResponse = RetrofitClient.instance.getProfile("Bearer $token")
+
+                if (profileResponse.isSuccessful && profileResponse.body() != null) {
+                    val user = profileResponse.body()!!
+                    val userId = user.getId()
+
+                    if (userId == null || userId.isEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            showLoading(false)
+                            Toast.makeText(this@EditProfileActivity,
+                                "❌ Impossible de récupérer l'ID utilisateur",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        return@launch
+                    }
+
+                    // 2. Utiliser cet ID pour l'update
+                    val request = UserUpdateRequest(firstName, lastName, email)
+                    val updateResponse = RetrofitClient.instance.updateProfile(userId, request)
+
+                    withContext(Dispatchers.Main) {
+                        showLoading(false)
+
+                        if (updateResponse.isSuccessful) {
+                            Toast.makeText(this@EditProfileActivity,
+                                "✅ Profil mis à jour!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            // Mettre à jour localement
+                            sessionManager.saveUserInfo(
+                                userId = userId,
+                                username = sessionManager.getUsername() ?: "",
+                                name = "$firstName $lastName",
+                                email = email,
+                                role = sessionManager.getUserRole() ?: "USER"
+                            )
+
+                            finish()
+                        } else {
+                            val errorBody = updateResponse.errorBody()?.string()
+                            Toast.makeText(this@EditProfileActivity,
+                                "❌ Erreur: ${errorBody ?: "Inconnue"}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        showLoading(false)
+                        Toast.makeText(this@EditProfileActivity,
+                            "❌ Impossible de récupérer le profil",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    Toast.makeText(this@EditProfileActivity,
+                        "❌ Erreur réseau: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+    private fun debugSessionInfo() {
+        val prefs = getSharedPreferences("charity_prefs", MODE_PRIVATE)
+        val allPrefs = prefs.all
+
+        Log.d("SESSION_DEBUG", "=== PRÉFÉRENCES ACTUELLES ===")
+        allPrefs.forEach { (key, value) ->
+            Log.d("SESSION_DEBUG", "$key = $value")
+        }
+
+        // Vérifier spécifiquement l'ID
+        val userId = sessionManager.getUserId()
+        val username = sessionManager.getUsername()
+
+        Log.d("SESSION_DEBUG", "UserID: $userId")
+        Log.d("SESSION_DEBUG", "Username: $username")
+    }
     private fun changePassword(currentPassword: String, newPassword: String) {
         val username = sessionManager.getUsername()
 

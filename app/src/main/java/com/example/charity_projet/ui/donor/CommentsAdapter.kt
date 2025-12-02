@@ -1,6 +1,5 @@
 package com.example.charity_projet.ui.donor
 
-
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -44,8 +43,13 @@ class CommentsAdapter(
         holder.tvDate.text = formatDate(comment.dateCreation)
         holder.tvContent.text = comment.contenu ?: ""
 
-        // Afficher le bouton delete seulement si c'est le commentaire de l'utilisateur courant
-        val isMyComment = comment.user?.getId() == currentUserId || comment.user?.identifiant == currentUserId
+        // Vérifier si c'est le commentaire de l'utilisateur courant
+        val isMyComment = if (currentUserId.isNotEmpty()) {
+            comment.user?.getId() == currentUserId || comment.user?.identifiant == currentUserId
+        } else {
+            false
+        }
+
         holder.btnDelete.visibility = if (isMyComment) View.VISIBLE else View.GONE
 
         // Listener pour supprimer
@@ -55,7 +59,7 @@ class CommentsAdapter(
 
         // Mettre en évidence mes commentaires
         if (isMyComment) {
-            holder.itemView.setBackgroundColor(Color.parseColor("#F0F8FF")) // Bleu clair
+            holder.itemView.setBackgroundColor(Color.parseColor("#F0F8FF"))
         } else {
             holder.itemView.setBackgroundColor(Color.TRANSPARENT)
         }

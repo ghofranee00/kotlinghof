@@ -20,14 +20,15 @@ import java.util.Locale
 class DonorPostAdapter(
     private var posts: List<Post>,
     private val listener: PostClickListener,
-    private val currentUserId: String? // Ajout de l'ID utilisateur courant
+    private val currentUserId: String?
 ) : RecyclerView.Adapter<DonorPostAdapter.PostViewHolder>() {
 
     interface PostClickListener {
         fun onHelpClick(post: Post)
         fun onShareClick(post: Post)
-        fun onLikeClick(post: Post)    // Nouveau
-        fun onCommentClick(post: Post) // Nouveau
+        fun onLikeClick(post: Post)
+        fun onCommentClick(post: Post)
+        fun onSeeCommentsClick(post: Post)  // NOUVELLE
     }
 
     class PostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -37,12 +38,11 @@ class DonorPostAdapter(
         val tvContent: TextView = itemView.findViewById(R.id.tv_content)
         val tvLikesCount: TextView = itemView.findViewById(R.id.tv_likes_count)
         val tvCommentsCount: TextView = itemView.findViewById(R.id.tv_comments_count)
+        val tvSeeComments: TextView = itemView.findViewById(R.id.tv_see_comments)  // NOUVELLE
         val ivPostImage: ImageView = itemView.findViewById(R.id.iv_post_image)
         val tvImageCount: TextView = itemView.findViewById(R.id.tv_image_count)
         val tvVideoCount: TextView = itemView.findViewById(R.id.tv_video_count)
         val buttonsLayout: LinearLayout = itemView.findViewById(R.id.buttons_layout)
-
-        // Boutons
         val btnLike: Button = itemView.findViewById(R.id.btn_like)
         val btnComment: Button = itemView.findViewById(R.id.btn_comment)
         val btnHelp: Button = itemView.findViewById(R.id.btn_help)
@@ -65,8 +65,20 @@ class DonorPostAdapter(
         holder.tvContent.text = post.contenu ?: "No content"
 
         // Compteurs
-        holder.tvLikesCount.text = "👍 ${post.likesCount}"
-        holder.tvCommentsCount.text = "💬 ${post.commentsCount}"
+        val likesCount = post.likesCount ?: 0
+        val commentsCount = post.commentsCount ?: 0
+
+        holder.tvLikesCount.text = "👍 $likesCount"
+
+        // Gestion des commentaires
+        if (commentsCount > 0) {
+            holder.tvCommentsCount.text = "💬 $commentsCount comments"
+            holder.tvSeeComments.visibility = View.VISIBLE
+            holder.tvSeeComments.text = "👁️ See all"
+        } else {
+            holder.tvCommentsCount.text = "💬 Add comment"
+            holder.tvSeeComments.visibility = View.GONE
+        }
 
         // Vérifier si l'utilisateur a déjà liké
         val isLiked = post.likedByUserIds?.contains(currentUserId) ?: false
@@ -94,16 +106,26 @@ class DonorPostAdapter(
         holder.btnShare.setOnClickListener {
             listener.onShareClick(post)
         }
+
+        // Listener pour "See all comments"
+        holder.tvSeeComments.setOnClickListener {
+            listener.onSeeCommentsClick(post)
+        }
+
+        // Listener sur le compteur de commentaires aussi
+        holder.tvCommentsCount.setOnClickListener {
+            listener.onSeeCommentsClick(post)
+        }
     }
 
     private fun updateLikeButton(button: Button, isLiked: Boolean) {
         if (isLiked) {
             button.text = "❤️ Liked"
-            button.setBackgroundColor(Color.parseColor("#FF4081")) // Rose pour "liked"
+            button.setBackgroundColor(Color.parseColor("#FF4081"))
             button.setTextColor(Color.WHITE)
         } else {
             button.text = "👍 Like"
-            button.setBackgroundColor(Color.parseColor("#E0E0E0")) // Gris clair
+            button.setBackgroundColor(Color.parseColor("#E0E0E0"))
             button.setTextColor(Color.BLACK)
         }
     }
@@ -131,8 +153,6 @@ class DonorPostAdapter(
             } else {
                 holder.tvImageCount.visibility = View.GONE
             }
-            // Note: Ici vous pouvez charger l'image avec Glide/Picasso
-            // Glide.with(holder.itemView.context).load(post.imageUrls[0]).into(holder.ivPostImage)
         } else {
             holder.ivPostImage.visibility = View.GONE
             holder.tvImageCount.visibility = View.GONE

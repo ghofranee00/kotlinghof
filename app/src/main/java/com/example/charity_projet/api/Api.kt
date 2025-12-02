@@ -22,16 +22,7 @@ interface Api {
     @POST("keycloak/logout")
     suspend fun logout(): Response<Void>
 
-    @PUT("keycloak/profile/{username}")
-    suspend fun updateProfile(
-        @Path("username") username: String,
-        @Body updateDto: UserUpdateRequest
-    ): Response<User>
-    @PUT("keycloak/profile/{username}/password")
-    suspend fun updatePassword(
-        @Path("username") username: String,
-        @Body passwordDto: PasswordUpdateRequest
-    ): Response<Void>
+
     @GET("admin/summary-report")
     suspend fun getAdminSummaryReport(@Header("Authorization") token: String): Response<SummaryReportDTO>
 
@@ -245,5 +236,15 @@ interface Api {
     ): Response<Map<String, Any>>
     // Likes
 
+    @PUT("api/keycloak/profile/{id}")
+    suspend fun updateProfile(
+        @Path("id") userId: String, // Doit être l'ID, pas le username
+        @Body userUpdate: UserUpdateRequest
+    ): Response<User>
 
+    @PUT("api/users/{id}/password")
+    suspend fun updatePassword(
+        @Path("id") userId: String, // Doit être l'ID, pas le username
+        @Body passwordUpdate: PasswordUpdateRequest
+    ): Response<Void>
 }

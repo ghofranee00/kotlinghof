@@ -43,7 +43,7 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
         setContentView(R.layout.activity_donor_posts)
 
         sessionManager = SessionManager(this)
-        currentUserId = sessionManager.getUserId() // Récupérer l'ID utilisateur
+        currentUserId = sessionManager.getUserId()
 
         setupViews()
         setupSpinner()
@@ -58,12 +58,10 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
         btnBack = findViewById(R.id.btn_back)
         spinnerFilter = findViewById(R.id.spinner_filter)
 
-        // Setup RecyclerView avec le nouvel adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = DonorPostAdapter(emptyList(), this, currentUserId) // Passer currentUserId
+        adapter = DonorPostAdapter(emptyList(), this, currentUserId)
         recyclerView.adapter = adapter
 
-        // Listeners
         btnBack.setOnClickListener { finish() }
         btnRefresh.setOnClickListener { loadAllPosts() }
     }
@@ -83,36 +81,25 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
         spinnerFilter.adapter = adapter
 
         spinnerFilter.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 applyTypeFilter()
             }
-
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
     private fun applyTypeFilter() {
         val selectedType = spinnerFilter.selectedItem.toString()
-
         filteredPosts = if (selectedType == "Tous les types") {
             allPosts
         } else {
-            allPosts.filter { post ->
-                post.typeDemande == selectedType
-            }.toMutableList()
+            allPosts.filter { it.typeDemande == selectedType }.toMutableList()
         }
-
         showPosts(filteredPosts)
     }
 
     private fun loadAllPosts() {
         val token = sessionManager.fetchAuthToken()
-
         if (token == null) {
             showToast("Non connecté")
             redirectToLogin()
@@ -125,22 +112,18 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = RetrofitClient.instance.getAllPosts("Bearer $token")
-
                 withContext(Dispatchers.Main) {
                     showLoading(false)
-
                     if (response.isSuccessful) {
                         val posts = response.body() ?: emptyList()
                         allPosts = posts.toMutableList()
                         applyTypeFilter()
-                        showToast("${posts.size} posts chargés")
                     } else {
                         when (response.code()) {
                             401 -> {
                                 showToast("Session expirée")
                                 redirectToLogin()
                             }
-                            403 -> showToast("Accès refusé")
                             else -> showToast("Erreur: ${response.code()}")
                         }
                     }
@@ -149,7 +132,6 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
                 withContext(Dispatchers.Main) {
                     showLoading(false)
                     showToast("Erreur réseau: ${e.message}")
-                    showEmptyState(true, "Erreur de connexion")
                 }
             }
         }
@@ -170,20 +152,18 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
         }
     }
 
-    // Interface PostClickListener - TOUTES LES MÉTHODES
+    // ============ INTERFACE IMPLÉMENTATION ============
+
     override fun onHelpClick(post: Post) {
         val postId = post.getId() ?: run {
-            Log.e("DonorPosts", "Post ID is null! Post: $post")
-            Toast.makeText(this, "Error: Invalid post", Toast.LENGTH_SHORT).show()
+            showToast("Invalid post")
             return
         }
-
-        Log.d("DonorPosts", "onHelpClick - Post ID: $postId")
 
         AlertDialog.Builder(this)
             .setTitle("Help - ${post.typeDemande ?: "Request"}")
             .setMessage("Do you want to help with this request?\n\n${post.contenu ?: "No content"}")
-            .setPositiveButton("Yes, I want to help") { dialog, which ->
+            .setPositiveButton("Yes, I want to help") { _, _ ->
                 val intent = Intent(this, CreateDonationActivity::class.java).apply {
                     putExtra("POST_ID", postId)
                     putExtra("POST_CONTENT", post.contenu ?: "")
@@ -209,7 +189,6 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
             action = Intent.ACTION_SEND
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, shareText)
-            putExtra(Intent.EXTRA_SUBJECT, "Post Charity App - ${post.typeDemande}")
         }
         startActivity(Intent.createChooser(shareIntent, "Partager ce post"))
     }
@@ -218,83 +197,29 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
         toggleLike(post)
     }
 
+    // OPTION 1: Commenter directement (dialog rapide)
     override fun onCommentClick(post: Post) {
         showCommentDialog(post)
     }
 
-    private fun toggleLike(post: Post) {
-        val token = sessionManager.fetchAuthToken()
-        val postId = post.getId()
+    // OPTION 2: Voir tous les commentaires
+    override fun onSeeCommentsClick(post: Post) {
+        openCommentsActivity(post)
+    }
 
+    // ============ MÉTHODES POUR LES COMMENTAIRES ============
 
-        // DEBUG: Afficher le token
-        Log.d("DonorPosts", "=== DEBUG TOKEN ===")
-        Log.d("DonorPosts", "Token complet: $token")
-        Log.d("DonorPosts", "Token length: ${token?.length}")
-        Log.d("DonorPosts", "User ID from session: $currentUserId")
-        Log.d("DonorPosts", "Post ID: $postId")
-        Log.d("DonorPosts", "=================")
-
-
-        if (token == null || postId == null) {
-            showToast("Veuillez vous connecter d'abord")
-            return
-        }
-
-        val isCurrentlyLiked = post.likedByUserIds?.contains(currentUserId) ?: false
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = if (isCurrentlyLiked) {
-                    // DELETE pour enlever le like
-                    RetrofitClient.instance.unlikePost(
-                        token = "Bearer $token",
-                        postId = postId
-                    )
-                } else {
-                    // POST pour ajouter un like
-                    RetrofitClient.instance.likePost(
-                        token = "Bearer $token",
-                        postId = postId
-                    )
-                }
-
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        val message = if (isCurrentlyLiked) "Like retiré" else "Post aimé!"
-                        showToast(message)
-
-                        // Rafraîchir les données
-                        loadAllPosts()
-                    } else {
-                        val errorCode = response.code()
-                        val errorBody = response.errorBody()?.string() ?: "Erreur inconnue"
-
-                        Log.e("DonorPosts", "Like erreur $errorCode: $errorBody")
-
-                        when (errorCode) {
-                            401 -> {
-                                showToast("Session expirée")
-                                redirectToLogin()
-                            }
-                            else -> showToast("Erreur: $errorCode")
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    showToast("Erreur réseau: ${e.message}")
-                }
-            }
-        }
-    }    private fun showCommentDialog(post: Post) {
+    private fun showCommentDialog(post: Post) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_comment, null)
         val etComment = dialogView.findViewById<EditText>(R.id.et_comment)
+        val tvPostPreview = dialogView.findViewById<TextView>(R.id.tv_post_preview)
+
+        tvPostPreview.text = "${post.typeDemande}: ${post.contenu?.take(50)}..."
 
         AlertDialog.Builder(this)
-            .setTitle("Add a comment")
+            .setTitle("Add a Quick Comment")
             .setView(dialogView)
-            .setPositiveButton("Post") { dialog, which ->
+            .setPositiveButton("Post Comment") { _, _ ->
                 val commentText = etComment.text.toString().trim()
                 if (commentText.isNotEmpty()) {
                     postComment(post, commentText)
@@ -303,7 +228,24 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
                 }
             }
             .setNegativeButton("Cancel", null)
+            .setNeutralButton("See All Comments") { _, _ ->
+                openCommentsActivity(post)
+            }
             .show()
+    }
+
+    private fun openCommentsActivity(post: Post) {
+        val postId = post.getId() ?: run {
+            showToast("Cannot open comments: invalid post")
+            return
+        }
+
+        val intent = Intent(this, CommentsActivity::class.java).apply {
+            putExtra("POST_ID", postId)
+            putExtra("POST_CONTENT", post.contenu ?: "")
+            putExtra("POST_TYPE", post.typeDemande ?: "General")
+        }
+        startActivity(intent)
     }
 
     private fun postComment(post: Post, commentText: String) {
@@ -311,20 +253,13 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
         val postId = post.getId()
 
         if (token == null || postId == null) {
-            showToast("Veuillez vous connecter d'abord")
+            showToast("Please login first")
             return
         }
 
-        // Log pour debug
-        Log.d("DonorPosts", "Envoi commentaire - PostId: $postId, Texte: $commentText")
-
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Utilisez CommentRequest correctement
                 val commentRequest = CommentRequest(contenu = commentText)
-
-                Log.d("DonorPosts", "CommentRequest créé: $commentRequest")
-
                 val response = RetrofitClient.instance.addComment(
                     token = "Bearer $token",
                     postId = postId,
@@ -333,57 +268,66 @@ class DonorPostsActivity : AppCompatActivity(), DonorPostAdapter.PostClickListen
 
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        showToast("Commentaire posté avec succès!")
-                        // Rafraîchir les posts
-                        loadAllPosts()
+                        showToast("Comment posted!")
+                        loadAllPosts() // Rafraîchir
                     } else {
-                        // Debug détaillé
-                        val errorCode = response.code()
-                        val errorBody = response.errorBody()?.string() ?: "Pas de message d'erreur"
-
-                        Log.e("DonorPosts", "Erreur HTTP $errorCode: $errorBody")
-
-                        when (errorCode) {
-                            400 -> showToast("Erreur 400 - Requête invalide: $errorBody")
-                            401 -> {
-                                showToast("Session expirée, veuillez vous reconnecter")
-                                redirectToLogin()
-                            }
-                            403 -> showToast("Accès refusé")
-                            else -> showToast("Erreur serveur: $errorCode")
-                        }
+                        showToast("Error: ${response.code()}")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Log.e("DonorPosts", "Exception réseau: ${e.message}", e)
-                    showToast("Erreur réseau: ${e.message}")
+                    showToast("Network error: ${e.message}")
                 }
             }
         }
     }
+
+    private fun toggleLike(post: Post) {
+        val token = sessionManager.fetchAuthToken()
+        val postId = post.getId()
+
+        if (token == null || postId == null) {
+            showToast("Please login first")
+            return
+        }
+
+        val isCurrentlyLiked = post.likedByUserIds?.contains(currentUserId) ?: false
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = if (isCurrentlyLiked) {
+                    RetrofitClient.instance.unlikePost(token = "Bearer $token", postId = postId)
+                } else {
+                    RetrofitClient.instance.likePost(token = "Bearer $token", postId = postId)
+                }
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val message = if (isCurrentlyLiked) "Like retiré" else "Post aimé!"
+                        showToast(message)
+                        loadAllPosts()
+                    } else {
+                        showToast("Error: ${response.code()}")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showToast("Network error: ${e.message}")
+                }
+            }
+        }
+    }
+
+    // ============ MÉTHODES UTILITAIRES ============
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
-        Log.d("DonorPosts", "onActivityResult called: requestCode=$requestCode, resultCode=$resultCode")
-
-        if (requestCode == REQUEST_CODE_CREATE_DONATION) {
-            when (resultCode) {
-                RESULT_OK -> {
-                    Log.d("DonorPosts", "Donation created successfully!")
-                    showToast("Donation created successfully!")
-                    loadAllPosts()
-                }
-                RESULT_CANCELED -> {
-                    Log.d("DonorPosts", "Donation creation cancelled")
-                    showToast("Donation creation cancelled")
-                }
-                else -> {
-                    Log.d("DonorPosts", "Unknown result code: $resultCode")
-                }
-            }
+        if (requestCode == REQUEST_CODE_CREATE_DONATION && resultCode == RESULT_OK) {
+            showToast("Donation created successfully!")
+            loadAllPosts()
         }
     }
+
     private fun showEmptyState(show: Boolean, message: String) {
         if (show) {
             tvEmpty.text = message

@@ -97,4 +97,31 @@ class SessionManager(context: Context) {
     fun clearAuthToken() {
         clearAuth()
     }
+    // Dans SessionManager class
+    fun debugAllPreferences() {
+        Log.d("SESSION_DEBUG", "=== TOUTES LES PRÉFÉRENCES ===")
+        prefs.all.forEach { (key, value) ->
+            Log.d("SESSION_DEBUG", "$key = '$value'")
+        }
+        Log.d("SESSION_DEBUG", "===============================")
+    }
+
+    // Méthode pour sauvegarder toutes les infos en une fois
+    fun saveLoginInfo(userId: String, username: String, token: String, role: String, email: String? = null) {
+        val editor = prefs.edit()
+
+        editor.putString(USER_TOKEN, token)
+        editor.putString(USER_ID, userId)
+        editor.putString(USER_USERNAME, username)
+        editor.putString(USER_ROLE, role)
+        email?.let { editor.putString(USER_EMAIL, it) }
+
+        editor.apply()
+
+        Log.d("SessionManager", "✅ Login info sauvegardée:")
+        Log.d("SessionManager", "   - UserID: '$userId'")
+        Log.d("SessionManager", "   - Username: '$username'")
+        Log.d("SessionManager", "   - Role: '$role'")
+        Log.d("SessionManager", "   - Token: ${token.take(10)}...")
+    }
 }
