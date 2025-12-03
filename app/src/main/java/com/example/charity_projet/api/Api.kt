@@ -22,7 +22,16 @@ interface Api {
     @POST("keycloak/logout")
     suspend fun logout(): Response<Void>
 
-
+    @PUT("keycloak/profile/{username}")
+    suspend fun updateProfile(
+        @Path("username") username: String,
+        @Body updateDto: UserUpdateRequest
+    ): Response<User>
+    @PUT("keycloak/profile/{username}/password")
+    suspend fun updatePassword(
+        @Path("username") username: String,
+        @Body passwordDto: PasswordUpdateRequest
+    ): Response<Void>
     @GET("admin/summary-report")
     suspend fun getAdminSummaryReport(@Header("Authorization") token: String): Response<SummaryReportDTO>
 
@@ -71,11 +80,13 @@ interface Api {
         @Header("Authorization") token: String
     ): Response<List<Demande>>
 
-    @PUT("demandes/{id}/statut")
+    // ⚠️ Correction précédente: ajout du Body et modification URL pour traiterDemande
+    @PUT("demandes/statut/{id}")
     suspend fun traiterDemande(
         @Header("Authorization") token: String,
         @Path("id") id: String,
-        @Query("action") action: String
+        @Query("action") action: String,
+        @Body body: RequestBody
     ): Response<ApiResponse>
 
     @GET("demandes/etat/{etat}")
@@ -150,6 +161,7 @@ interface Api {
 
 
     // Notifications
+    // ⚠️ Correction: retrait préfixe api/
     @GET("notifications/user/{userId}")
     suspend fun getNotificationsByUser(
         @Header("Authorization") token: String,
@@ -184,6 +196,12 @@ interface Api {
     suspend fun supprimerNotification(
         @Header("Authorization") token: String,
         @Path("id") notificationId: String
+    ): Response<ApiResponse>
+    
+    @DELETE("notifications/user/{userId}/toutes")
+    suspend fun supprimerToutesNotifications(
+        @Header("Authorization") token: String,
+        @Path("userId") userId: String
     ): Response<ApiResponse>
 
     // 🔹 Créer une donation
@@ -236,15 +254,10 @@ interface Api {
     ): Response<Map<String, Any>>
     // Likes
 
-    @PUT("api/keycloak/profile/{id}")
-    suspend fun updateProfile(
-        @Path("id") userId: String, // Doit être l'ID, pas le username
-        @Body userUpdate: UserUpdateRequest
-    ): Response<User>
 
-    @PUT("api/users/{id}/password")
-    suspend fun updatePassword(
-        @Path("id") userId: String, // Doit être l'ID, pas le username
-        @Body passwordUpdate: PasswordUpdateRequest
-    ): Response<Void>
+    // Chatbot endpoint
+    @POST("http://10.0.2.2:5000/chat") // Assuming chatbot server runs on localhost:5000
+    suspend fun sendMessageToChatbot(
+        @Body request: ChatRequest
+    ): Response<ChatResponse>
 }

@@ -12,6 +12,7 @@ import com.example.charity_projet.api.RetrofitClient
 import com.example.charity_projet.api.SessionManager
 import com.example.charity_projet.models.Post
 import com.example.charity_projet.ui.AboutUsActivity
+import com.example.charity_projet.ui.ChatbotActivity
 import com.example.charity_projet.ui.LoginActivity
 import com.example.charity_projet.ui.NotificationsActivity
 import com.example.charity_projet.ui.ProfileActivity
@@ -27,6 +28,7 @@ class DonorHomeActivity : AppCompatActivity() {
     private lateinit var btnProfile: ImageButton
     private lateinit var btnLogout: ImageButton
     private lateinit var btnHelpNow: Button
+    private lateinit var btnChatbot: Button
 
     // TextViews for statistics
     private lateinit var tvDonationsCount: TextView
@@ -51,6 +53,7 @@ class DonorHomeActivity : AppCompatActivity() {
         setupAppBarListeners()
         setupNavigation()
         setupHelpNowButton()
+        setupChatbotButton()
 
         // Load data
         loadDashboardData()
@@ -75,6 +78,7 @@ class DonorHomeActivity : AppCompatActivity() {
         btnProfile = findViewById(R.id.btn_profile)
         btnLogout = findViewById(R.id.btn_logout)
         btnHelpNow = findViewById(R.id.btn_help_now)
+        btnChatbot = findViewById(R.id.btn_chatbot)
 
         // Initialize statistics TextViews
         tvDonationsCount = findViewById(R.id.tv_donations_count)
@@ -130,6 +134,13 @@ class DonorHomeActivity : AppCompatActivity() {
         btnHelpNow.setOnClickListener {
             // Open posts activity
             val intent = Intent(this, DonorPostsActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    private fun setupChatbotButton() {
+        btnChatbot.setOnClickListener {
+            val intent = Intent(this, ChatbotActivity::class.java)
             startActivity(intent)
         }
     }

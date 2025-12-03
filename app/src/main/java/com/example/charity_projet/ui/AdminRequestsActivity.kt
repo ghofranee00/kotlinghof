@@ -25,6 +25,7 @@ import com.example.charity_projet.R
 import com.example.charity_projet.api.RetrofitClient
 import com.example.charity_projet.api.SessionManager
 import com.example.charity_projet.models.Demande
+import com.example.charity_projet.utils.NotificationManager
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,9 +33,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import java.util.Date
+
 class AdminRequestsActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
@@ -45,6 +48,7 @@ class AdminRequestsActivity : AppCompatActivity() {
     private lateinit var btnRefresh: Button
     private lateinit var btnBack: ImageButton
     private lateinit var spinnerFilter: Spinner
+    private lateinit var notificationManager: NotificationManager
 
     private var allDemandes = mutableListOf<Demande>()
     private var filteredDemandes = mutableListOf<Demande>()
@@ -54,6 +58,8 @@ class AdminRequestsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_admin_requests)
 
         sessionManager = SessionManager(this)
+        notificationManager = NotificationManager(this) // Initialize NotificationManager
+
         setupViews()
         setupSpinner()
         loadAllDemandes()
@@ -154,11 +160,15 @@ class AdminRequestsActivity : AppCompatActivity() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // CORRECTION: Utiliser le bon endpoint avec paramètre action
+                // Création d'un body vide pour la requête PUT
+                val emptyBody = RequestBody.create("application/json".toMediaType(), "{}")
+                
+                // CORRECTION: Utiliser le bon endpoint avec paramètre action et body
                 val response = RetrofitClient.instance.traiterDemande(
                     token = "Bearer $token",
                     id = demandeId,
-                    action = action // "accepter" ou "refuser"
+                    action = action, // "accepter" ou "refuser"
+                    body = emptyBody
                 )
 
                 withContext(Dispatchers.Main) {
@@ -167,6 +177,13 @@ class AdminRequestsActivity : AppCompatActivity() {
                     if (response.isSuccessful) {
                         val message = if (action == "accepter") "acceptée" else "refusée"
                         showToast("Demande $message avec succès")
+                        
+                        // 🔥 Trigger notification
+                        notificationManager.showNotification(
+                            "Demande Traitée",
+                            "La demande a été $message."
+                        )
+                        
                         // Recharger la liste
                         loadAllDemandes()
                     } else {

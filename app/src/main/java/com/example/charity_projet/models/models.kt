@@ -17,13 +17,14 @@ data class LoginResponse(
     val expiresIn: Int?,
     @SerializedName("refresh_token")
     val refreshToken: String?,
-    @SerializedName("user_id")        // 🔥 IMPORTANT: Ce champ doit exister
+    @SerializedName("user_id")
     val userId: Long?,
-    @SerializedName("username")       // 🔥 IMPORTANT: Ce champ doit exister
+    @SerializedName("username")
     val username: String?,
-    @SerializedName("role")           // 🔥 IMPORTANT: Ce champ doit exister
+    @SerializedName("role")
     val role: String?
 )
+
 data class RegisterRequest(
     val username: String,  // ⚠️ Changer identifiant → username
     val email: String,
@@ -284,4 +285,18 @@ data class DonationRequest(
 
     @SerializedName("images")
     val images: List<String> = emptyList()
+)
+
+// Chatbot models
+data class ChatMessage(
+    val message: String,
+    val isUser: Boolean
+)
+
+data class ChatRequest(
+    val message: String
+)
+
+data class ChatResponse(
+    val reply: String
 )

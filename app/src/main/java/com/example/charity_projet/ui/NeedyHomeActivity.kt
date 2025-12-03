@@ -42,6 +42,11 @@ class NeedyHomeActivity : AppCompatActivity() {
         findViewById<Button>(R.id.nav_posts).setOnClickListener {
             showPostsActivity()
         }
+        
+        // Ajout du listener pour nav_donations si nécessaire, ou ignorez-le s'il n'est pas utilisé
+        findViewById<Button>(R.id.nav_donations)?.setOnClickListener {
+            // showDonationsActivity() // À implémenter si besoin
+        }
 
         // Top Bar buttons
         findViewById<ImageButton>(R.id.btn_notifications).setOnClickListener {
@@ -58,9 +63,9 @@ class NeedyHomeActivity : AppCompatActivity() {
     }
 
     private fun setupWelcomeSection() {
-        // Setup help button to go directly to CreateDemandeActivity
-        findViewById<Button>(R.id.btn_help).setOnClickListener {
-            showCreateDemandeActivity()
+        // CORRECTION: Utilisation de l'ID correct 'btn_chatbot' au lieu de 'btn_help'
+        findViewById<Button>(R.id.btn_chatbot).setOnClickListener {
+            showChatbotActivity()
         }
     }
 
@@ -91,6 +96,11 @@ class NeedyHomeActivity : AppCompatActivity() {
 
     private fun showProfileActivity() {
         val intent = Intent(this, ProfileActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun showChatbotActivity() {
+        val intent = Intent(this, ChatbotActivity::class.java)
         startActivity(intent)
     }
 

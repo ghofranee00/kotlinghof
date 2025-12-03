@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- Message du bot (aligné à gauche) -->
+    <TextView
+        android:id="@+id/tvBotMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:background="#E0E0E0"
+        android:padding="10dp"
+        android:text="Hello"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:backgroundTint="#E0E0E0"
+        android:layout_marginEnd="48dp"
+         />
+
+    <!-- Message de l'utilisateur (aligné à droite) -->
+    <TextView
+        android:id="@+id/tvUserMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:background="#6A5ACD"
+        android:padding="10dp"
+        android:text="Hi"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:backgroundTint="#6A5ACD"
+        android:layout_marginStart="48dp"
+         />
+
+</LinearLayout>

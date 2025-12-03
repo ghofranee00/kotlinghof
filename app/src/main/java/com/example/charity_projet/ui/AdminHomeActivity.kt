@@ -97,8 +97,8 @@ class AdminHomeActivity : AppCompatActivity() {
         finish()
     }
     private fun loadUsersList() {
-         val intent = Intent(this, UsersActivity::class.java)
-         startActivity(intent)
+        val intent = Intent(this, UsersActivity::class.java)
+        startActivity(intent)
     }
 
     private fun loadRequestsList() {

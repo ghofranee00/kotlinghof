@@ -82,10 +82,10 @@
             android:layout_marginBottom="12dp" />
 
         <Button
-            android:id="@+id/btn_help"
+            android:id="@+id/btn_chatbot"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Get Help"
+            android:text="Chat Support"
             android:backgroundTint="@color/purple_500"
             android:textColor="@android:color/white"
             android:paddingHorizontal="24dp"

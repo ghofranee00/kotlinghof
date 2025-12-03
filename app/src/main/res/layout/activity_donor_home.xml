@@ -101,6 +101,19 @@
                     android:textColor="@android:color/white"
                     android:paddingVertical="12dp" />
 
+                <!-- Chatbot Button -->
+                <Button
+                    android:id="@+id/btn_chatbot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Chat Support 🤖"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:background="@color/purple_500"
+                    android:textColor="@android:color/white"
+                    android:paddingVertical="12dp" />
+
             </LinearLayout>
 
             <!-- Statistics Section -->

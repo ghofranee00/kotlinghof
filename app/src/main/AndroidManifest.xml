@@ -53,7 +53,8 @@
             android:exported="false" />
         <activity
             android:name=".ui.NeedyHomeActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
         <activity
             android:name=".ui.MesDemandesActivity"
             android:exported="false" />
@@ -89,7 +90,9 @@
             android:name=".ui.donor.CommentsActivity"
             android:exported="false" />
 
-
+        <activity
+            android:name=".ui.ChatbotActivity"
+            android:exported="false" />
 
 
     </application>

@@ -20,8 +20,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_back"
-        />
+            android:src="@drawable/ic_arrow_back" />
 
         <TextView
             android:layout_width="0dp"
@@ -33,7 +32,6 @@
             android:gravity="center"
             android:textColor="#333333" />
 
-        <!-- View invisible pour équilibrer -->
         <View
             android:layout_width="48dp"
             android:layout_height="48dp" />
@@ -111,6 +109,15 @@
         </LinearLayout>
 
     </com.google.android.material.card.MaterialCardView>
+
+    <!-- 🔥 AJOUT: ProgressBar centré -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone" />
 
     <!-- Buttons -->
     <Button

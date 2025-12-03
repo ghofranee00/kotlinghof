@@ -7,8 +7,22 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    // Pour émulateur Android Studio :
-    private const val BASE_URL = "http://192.168.1.14:8089/api/"
+
+    // =======================================================================
+    // ⚠️ CHOISISSEZ VOTRE CONFIGURATION ICI (Décommentez une seule ligne)
+    // =======================================================================
+
+    // OPTION 1 : Pour l'Émulateur Android Studio (Par défaut)
+    private const val BASE_URL = "http://10.0.2.2:8089/api/"
+
+    // OPTION 2 : Pour un Téléphone Physique (Connecté au même Wi-Fi que le PC)
+    // Remplacez '192.168.1.14' par l'adresse IPv4 de votre PC (tapez 'ipconfig' dans le terminal)
+    // private const val BASE_URL = "http://192.168.1.14:8089/api/"
+
+    // OPTION 3 : Pour l'Émulateur Genymotion
+    // private const val BASE_URL = "http://10.0.3.2:8089/api/"
+
+    // =======================================================================
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -29,7 +43,6 @@ object RetrofitClient {
             .build()
     }
 
-    // Correction : Remplacer apiService: ApiService par instance: Api
     val instance: Api by lazy {
         retrofit.create(Api::class.java)
     }
